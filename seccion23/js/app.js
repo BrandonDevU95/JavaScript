@@ -1,7 +1,10 @@
-//Constructor
+//Constructores
 function Seguro(marca, year, tipo) {
-	this.marcas, this.year, this.tipo;
+	(this.marca = marca), (this.year = year), (this.tipo = tipo);
 }
+function UI() {}
+
+const ui = new UI();
 
 //Realiza la cotizacion con los datos
 Seguro.prototype.cotizarSeguro = function () {
@@ -22,9 +25,25 @@ Seguro.prototype.cotizarSeguro = function () {
 		default:
 			break;
 	}
-};
 
-function UI() {}
+	// Diferencia entre el año actual y el año del coche
+	const diff = new Date().getFullYear() - this.year;
+
+	//Pos cada año de diferencia se reduce un 3% en el costo
+
+	cantidad -= (diff * 3 * cantidad) / 100;
+
+	//Un seguro basico se multiplica por un 30% mas
+	//Un seguro completo se multiplica por un 50% mas
+
+	if (this.tipo === 'basico') {
+		cantidad *= 1.3;
+	} else {
+		cantidad *= 1.5;
+	}
+
+	return cantidad;
+};
 
 //Llenar las opciones de los años
 UI.prototype.llenarOpciones = () => {
@@ -60,17 +79,42 @@ UI.prototype.mostrarMensaje = (mensaje, tipo) => {
 	}, 2000);
 };
 
-const ui = new UI();
+UI.prototype.mostrarResultado = (seguro, total) => {
+	const div = document.createElement('div');
+	const { marca, year, tipo } = seguro;
+	let textoMarca = '';
+	switch (marca) {
+		case '1':
+			textoMarca = 'Americano';
+			break;
+		case '2':
+			textoMarca = 'Asiatico';
+			break;
+		case '3':
+			textoMarca = 'Europeo';
+			break;
+	}
 
-document.addEventListener('DOMContentLoaded', () => {
-	ui.llenarOpciones(); //Llena el select con los años
-});
+	div.classList.add('mt-10');
+	div.innerHTML = `
+		  <p class='header'>Tu Resumen: </p>
+          <p class="font-bold">Marca: <span class="font-normal"> ${textoMarca} </span> </p>
+          <p class="font-bold">Año: <span class="font-normal"> ${year} </span> </p>
+          <p class="font-bold">Tipo: <span class="font-normal"> ${tipo} </span> </p>
+          <p class="font-bold"> Total: <span class="font-normal"> $ ${total} </span> </p>
+	`;
 
-eventListeners();
-function eventListeners() {
-	const formulario = document.querySelector('#cotizar-seguro');
-	formulario.addEventListener('submit', cotizarSeguro);
-}
+	const resultadoDiv = document.querySelector('#resultado');
+
+	//mostrar spin
+	const spinner = document.querySelector('#cargando');
+	spinner.style.display = 'block';
+
+	setTimeout(() => {
+		spinner.style.display = 'none';
+		resultadoDiv.appendChild(div);
+	}, 2000);
+};
 
 function cotizarSeguro(e) {
 	e.preventDefault();
@@ -85,6 +129,23 @@ function cotizarSeguro(e) {
 	}
 
 	ui.mostrarMensaje('Cotizando...', 'correcto');
+
+	const resultados = document.querySelector('#resultado div');
+	if (resultados != null) resultados.remove();
+
 	const seguro = new Seguro(marca, year, tipo);
-	seguro.cotizarSeguro();
+	const total = seguro.cotizarSeguro();
+
+	ui.mostrarResultado(seguro, total);
 }
+
+function eventListeners() {
+	const formulario = document.querySelector('#cotizar-seguro');
+	formulario.addEventListener('submit', cotizarSeguro);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+	ui.llenarOpciones(); //Llena el select con los años
+});
+
+eventListeners();
